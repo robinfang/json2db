@@ -206,6 +206,7 @@ public class JsonConverter {
 		logger.info("saving: "+hashmap.get("mid").toString());
 		String mid = hashmap.get("mid").toString();
 		saveWeiboUser(hashmap.get("user_sname").toString(), hashmap.get("user_url").toString());
+		this.con.setAutoCommit(false);
 		Boolean saved = saveWeiboPost(hashmap.get("mid").toString(), hashmap.get("content").toString(),hashmap.get("time").toString(),hashmap.get("user_url").toString());
 		if(saved){
 			ArrayList repostlist = (ArrayList) hashmap.get("repost_list");
@@ -218,6 +219,7 @@ public class JsonConverter {
 		}else{
 			logger.info("mid "+mid+" exists");
 		}
+		this.con.commit();
 	}
 	public void save2DB(String filepath) throws Exception{
 		File file = new File(filepath);
