@@ -28,12 +28,12 @@ public class JsonConverter {
 	/**
 	 * @param args
 	 */
-	private static Logger logger = LoggerFactory.getLogger(JsonConverter.class);
+	protected static Logger logger = LoggerFactory.getLogger(JsonConverter.class);
 	// private JsonGenerator jsonGenerator = null;
-	private ObjectMapper objectMapper;
+	protected ObjectMapper objectMapper;
 	//private StandardServiceRegistry serviceRegistry;
 	//private static SessionFactory sessionFactory;
-	private static Connection con;	
+	protected Connection con;	
 	public JsonConverter() throws Exception {
 		this.objectMapper = new ObjectMapper();
 		this.con = getConnection();
