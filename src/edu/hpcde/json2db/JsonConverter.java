@@ -28,12 +28,12 @@ public class JsonConverter {
 	/**
 	 * @param args
 	 */
-	private static Logger logger = LoggerFactory.getLogger(JsonConverter.class);
+	protected static Logger logger = LoggerFactory.getLogger(JsonConverter.class);
 	// private JsonGenerator jsonGenerator = null;
 	private ObjectMapper objectMapper;
 	//private StandardServiceRegistry serviceRegistry;
 	//private static SessionFactory sessionFactory;
-	private static Connection con;	
+	protected Connection con;	
 	public JsonConverter() throws Exception {
 		this.objectMapper = new ObjectMapper();
 		this.con = getConnection();
@@ -182,7 +182,7 @@ public class JsonConverter {
 		try{
 			pre.executeUpdate();
 		}catch(SQLException e){
-			logger.error("SQLException ",e);
+			logger.error("SQLException: "+e);
 			logger.error("content: "+content);
 		}
 		closeAll(null,pre,null);
@@ -232,7 +232,7 @@ public class JsonConverter {
 		// InputStream in = new FileInputStream(file);
 		// JsonConverter j = new JsonConverter();
 		// j.readJson2Map(in);
-		File dir = new File("E:\\pyworkspace\\weibo_3_20_test");
+		File dir = new File("E:\\pyworkspace\\fangxiaozhang");
 		File[] files = dir.listFiles();
 		JsonConverter jc = new JsonConverter();
 		for(File file:files){
