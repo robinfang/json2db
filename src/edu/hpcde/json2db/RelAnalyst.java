@@ -1,5 +1,9 @@
 package edu.hpcde.json2db;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,10 +12,14 @@ import java.sql.SQLException;
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class RelAnalyst extends JsonConverter {
-	
+	private PrintWriter out;
 	public RelAnalyst() throws Exception {
 		super();
-		// TODO Auto-generated constructor stub
+		this.out=new PrintWriter(new BufferedWriter(new FileWriter("f:\\myfile.csv", true)));
+	}
+	public void destory(){
+		super.destory();
+		out.close();
 	}
 	
 	public int getRepostSouce(String substr) throws SQLException{
@@ -32,15 +40,18 @@ public class RelAnalyst extends JsonConverter {
 		return repostid;
 		
 	}
+	public void writeOneLine(int n,int source_n) throws IOException{
+		    this.out.println(n+","+source_n);
+	}
 	
-	public void genRel() throws SQLException{
+	public void genRel() throws SQLException, Exception{
 		//con.setAutoCommit(false);
 		String sql = "select `repost_id`,`repoststring` from weiborepost where `mid`=? ".replace("`", "\"");
 		PreparedStatement ps = con.prepareStatement(sql);
 		ps.setString(1, "ABFMmAs8r");
 		ResultSet rs = ps.executeQuery();
 		while(rs.next()){
-			String repostid = rs.getString(1);
+			int repostid = rs.getInt(1);
 			String repoststring = rs.getString(2);
 			String[] sp = repoststring.split("//@");
 			if(sp.length >1){
@@ -49,14 +60,18 @@ public class RelAnalyst extends JsonConverter {
 				int fromid = getRepostSouce(sp[1]);
 				if(fromid==-1){
 					//repostid到origin
+					writeOneLine(repostid, -1);
 				}else{
 					//repostid到fromid
+					writeOneLine(repostid, fromid);
 				}
 			}else{
 				//repostid到origin
+				writeOneLine(repostid, -1);
 			}
 		}
 		closeAll(rs,ps,null);
+		out.close();
 		//con.commit();
 	}
 	public static void main(String[] args) throws Exception {
