@@ -45,8 +45,8 @@ public class JsonConverter {
 	 * @param in
 	 * @throws Exception
 	 */
-	public void readJson2Map(InputStream in) throws Exception {
-		HashMap<String, Object> hashmap = objectMapper.readValue(in,HashMap.class);
+	public void readJson2Map(InputStream inputStream) throws Exception {
+		HashMap<String, Object> hashmap = objectMapper.readValue(inputStream,HashMap.class);
 		String content = hashmap.get("content").toString();
 		System.out.println(content);
 	}
@@ -201,8 +201,8 @@ public class JsonConverter {
 	}
 	public void save2DB(File file) throws Exception{
 		
-		InputStream in = new FileInputStream(file);
-		HashMap<String, Object> hashmap = objectMapper.readValue(in,HashMap.class);
+		InputStream inputStream = new FileInputStream(file);
+		HashMap<String, Object> hashmap = objectMapper.readValue(inputStream,HashMap.class);
 		logger.info("saving: "+hashmap.get("mid").toString());
 		String mid = hashmap.get("mid").toString();
 		saveWeiboUser(hashmap.get("user_sname").toString(), hashmap.get("user_url").toString());
