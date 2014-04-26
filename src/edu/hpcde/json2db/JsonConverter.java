@@ -30,7 +30,7 @@ public class JsonConverter {
 	 */
 	protected static Logger logger = LoggerFactory.getLogger(JsonConverter.class);
 	// private JsonGenerator jsonGenerator = null;
-	private ObjectMapper objectMapper;
+	protected ObjectMapper objectMapper;
 	//private StandardServiceRegistry serviceRegistry;
 	//private static SessionFactory sessionFactory;
 	protected Connection con;	

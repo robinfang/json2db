@@ -4,13 +4,9 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.MessageDigest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.apache.commons.codec.digest.DigestUtils;
-
 public class RelAnalyst extends JsonConverter {
 	private PrintWriter out;
 	public RelAnalyst() throws Exception {
