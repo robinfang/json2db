@@ -18,7 +18,7 @@ public class RelAnalyst extends JsonConverter {
 		out.close();
 	}
 	
-	public int getRepostSouce(String substr) throws SQLException{
+	public int getRepostSource(String substr) throws SQLException{
 		substr = substr.split("赞")[0].replaceAll("\\s","");
 		logger.info("3 substr: "+substr);
 		String sql = "select `repost_id`,`repoststring` from weiborepost where `mid`=? and `repoststring` like ?".replace("`", "\"");
@@ -53,7 +53,7 @@ public class RelAnalyst extends JsonConverter {
 			if(sp.length >1){
 				logger.info("1 repost_id: "+repostid);
 				logger.info("2 repost_string: "+repoststring);
-				int fromid = getRepostSouce(sp[1]);
+				int fromid = getRepostSource(sp[1]);
 				if(fromid==-1){
 					//repostid到origin
 					writeOneLine(repostid, -1);

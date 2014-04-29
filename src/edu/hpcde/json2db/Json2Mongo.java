@@ -20,7 +20,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 
 public class Json2Mongo {
-	protected static Logger logger = LoggerFactory.getLogger(JsonConverter.class);
+	protected static Logger logger = LoggerFactory.getLogger(Json2Mongo.class);
 	private ObjectMapper objectMapper;
 	private DB db;
 	private MongoClient mongoClient;
@@ -28,6 +28,7 @@ public class Json2Mongo {
 		this.objectMapper = new ObjectMapper();
 		this.mongoClient = new MongoClient( "localhost" , 27017 ); 
 		this.db = mongoClient.getDB( "test" ); 
+		
 		
 	}
 	public void destory(){
@@ -59,7 +60,7 @@ public class Json2Mongo {
 		for(Object item : repostlist){
 			HashMap m = (HashMap)item;
 			url = m.get("user_url").toString();
-			name = m.get("user_sname").toString();
+			name = m.get("user_sname")==null?"":m.get("user_sname").toString();
 			documentMap =new HashMap();
 			documentMap.put("url",url);
 			documentMap.put("name",name);
@@ -73,14 +74,25 @@ public class Json2Mongo {
 	}
 	
 	public static void main(String[] args) throws Exception{
-		Json2Mongo jm = new Json2Mongo();
-		File dir = new File("E:\\pyworkspace\\weibo_3_20_test");
-		File[] files = dir.listFiles();
-		for(File file:files){
-			jm.saveUser2DB(file);
+		if(args.length!=1){
+			System.out.println("Usage: pass one folder as arg.");
+		}else{
+			
+			long begintime = System.currentTimeMillis();
+			logger.info("start");
+			Json2Mongo jm = new Json2Mongo();
+			//File dir = new File("E:\\pyworkspace\\weibo_3_20_test");
+			File dir = new File(args[0]);
+			File[] files = dir.listFiles();
+			for(File file:files){
+				jm.saveUser2DB(file);
+			}
+			jm.destory();
+			logger.info("done");
+			long endtime=System.currentTimeMillis();
+			long costTime = (endtime - begintime)/1000;
+			logger.info(String.valueOf(costTime));
 		}
-		jm.destory();
-		logger.info("done");
 		
 	}
 }

@@ -14,7 +14,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 
+import org.apache.commons.io.FilenameUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -217,7 +219,7 @@ public class JsonConverter {
 				saveWeiboRepost(m, user_url, mid);
 			}
 		}else{
-			logger.info("mid "+mid+" exists");
+			logger.info("mid exists: "+mid);
 		}
 		this.con.commit();
 	}
@@ -225,21 +227,53 @@ public class JsonConverter {
 		File file = new File(filepath);
 		save2DB(file);
 	}
-
+	public HashSet<String> getPostList() throws SQLException{
+		HashSet<String> hashSet = new HashSet<String>();
+		String sql = "select `mid` from weibopost".replace("`", "\"");
+		PreparedStatement pre = con.prepareStatement(sql);
+		ResultSet rs = pre.executeQuery(sql);
+		int rowNumber = 0;
+		while(rs.next()){
+			String mid = rs.getString(1);
+			hashSet.add(mid);
+			rowNumber++;
+		}
+		logger.info("total mid: " + rowNumber);
+		closeAll(rs, pre, null);
+		return hashSet;
+	}
+	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		// File file = new File("E:/fworkspace/Ah8KZjeYu.json");
 		// InputStream in = new FileInputStream(file);
 		// JsonConverter j = new JsonConverter();
 		// j.readJson2Map(in);
-		File dir = new File("E:\\pyworkspace\\fangxiaozhang");
-		File[] files = dir.listFiles();
-		JsonConverter jc = new JsonConverter();
-		for(File file:files){
-			jc.save2DB(file);
+		if(args.length!=1){
+			System.out.println("Usage: pass one folder as arg.");
+		}else{
+			long begintime = System.currentTimeMillis();
+			logger.info("start");
+			File dir = new File(args[0]);
+			//File dir = new File("E:\\pyworkspace\\fangxiaozhang");
+			File[] files = dir.listFiles();
+			JsonConverter jc = new JsonConverter();
+			HashSet<String> hashSet = jc.getPostList();
+			for(File file:files){
+				String fileName = FilenameUtils.getBaseName(file.getName());
+				if(hashSet.contains(fileName)){
+					logger.info("mid passed: " + fileName);
+					continue;
+				}
+				jc.save2DB(file);
+			}
+			//jc.save2DB("e:/workspace/A0ju7ih4D.json");
+			jc.destory();
+			logger.info("done");
+			long endtime=System.currentTimeMillis();
+			long costTime = (endtime - begintime)/1000;
+			logger.info("In " + String.valueOf(costTime) + " seconds.");
+			
 		}
-		//jc.save2DB("e:/workspace/A0ju7ih4D.json");
-		jc.destory();
 	}
-
 }
