@@ -26,7 +26,7 @@ public class Json2Mongo {
 	private MongoClient mongoClient;
 	public Json2Mongo() throws Exception{
 		this.objectMapper = new ObjectMapper();
-		this.mongoClient = new MongoClient( "localhost" , 27017 ); 
+		this.mongoClient = new MongoClient( "222.199.193.19" , 27017 ); 
 		this.db = mongoClient.getDB( "test" ); 
 		
 		
