@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class DatabaseOperator {
-	protected static Logger logger = LoggerFactory.getLogger(JsonConverter.class);
 	public abstract void  destory();
 	public static void closeAll(ResultSet rs, PreparedStatement ps,
 			Connection con) {

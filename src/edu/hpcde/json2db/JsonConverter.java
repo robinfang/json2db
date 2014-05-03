@@ -195,9 +195,10 @@ public class JsonConverter {
 	 * @param mid
 	 * @throws SQLException
 	 */
-	public void saveWeiboRepost(HashMap m, String user_url, String mid) throws SQLException{
+	public void saveWeiboRepost(HashMap m, String mid) throws SQLException{
 		String time = m.get("time").toString();
 		String content = m.get("content").toString();
+		String user_url = m.get("user_url").toString();
 		String repoststring = m.get("repost_string").toString();
 		saveWeiboRepost(time, content, repoststring, user_url, mid);
 	}
@@ -214,9 +215,9 @@ public class JsonConverter {
 			ArrayList repostlist = (ArrayList) hashmap.get("repost_list");
 			for(Object item : repostlist){
 				HashMap m = (HashMap)item;
-				String user_url = m.get("user_url").toString();
+				//String user_url = m.get("user_url").toString();
 				saveWeiboUser(m);
-				saveWeiboRepost(m, user_url, mid);
+				saveWeiboRepost(m, mid);
 			}
 		}else{
 			logger.info("mid exists: "+mid);

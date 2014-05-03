@@ -1,14 +1,12 @@
 package edu.hpcde.json2db;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,103 +14,76 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-public class Rel2db extends DatabaseOperator{
+public class Rel2db{
 	protected static Logger logger = LoggerFactory.getLogger(Rel2db.class);
-	protected Connection con;
 	protected Jedis jedis;
 	protected JedisPool pool;
+	protected ObjectMapper objectMapper;
 	public Rel2db() throws Exception{
-		this.con = getConnection();
-		//JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost");
-		//this.jedis = pool.getResource();
+		this.objectMapper = new ObjectMapper();
+		this.pool = new JedisPool(new JedisPoolConfig(), "localhost",6379,100000);
+		this.jedis = this.pool.getResource();
 	}
-	public static Connection getConnection() throws Exception{
-		Class.forName("oracle.jdbc.driver.OracleDriver");
-		logger.info("connecting");
-		String urlString = "jdbc:oracle:thin:@//222.199.193.19:1521/orcl";
-		String userString = "crawler";
-		String password = "crawler";
-		Connection con = DriverManager.getConnection(urlString, userString, password);
-		return con;
-	}
-	
-	@Override
 	public void destory() {
 		// TODO Auto-generated method stub
-		closeAll(null,null,con);
 		this.pool.returnResource(this.jedis);
 		this.pool.destroy();
-	}
-	
-	public String getFromUrl(String substr,String mid,String user_url) throws SQLException{
-		substr = substr.split("赞")[0].replaceAll("\\s","");
-		logger.info("substr: "+substr);
-		String sql = "select `repost_id`,`repoststring`,`user_url` from weiborepost where `mid`=? and instr(`repoststring`,?)=1".replace("`", "\"");
-		PreparedStatement ps = con.prepareStatement(sql);
-		ps.setString(1, mid);
-		ps.setString(2, substr+"%");
-		ResultSet rs = ps.executeQuery();
-		//取得url
-		if(rs.next()){
-			user_url = rs.getString(3);
-		}
-		closeAll(rs,ps,null);
-		return user_url;
-		
 	}
 	public void writeOneLine(PrintWriter out,String from_url,String cur_url){
 		out.println(from_url+","+cur_url);
 	}
 	public void write2db(String from_url,String cur_url){
 		//cur_url following from_url
-		//from_url follower cur_url
-		jedis.sadd("relationship:"+cur_url+".following", from_url);
-		jedis.sadd("relationship:"+from_url+".follower", cur_url);
-		
+		//from_url follower cur_url		
+		//logger.info("relationship:"+cur_url+".following");
+		this.jedis.sadd("relationship:"+cur_url+".following", from_url);
+		this.jedis.sadd("relationship:"+from_url+".follower", cur_url);
+	}
+	public void saveRelationship(File file) throws Exception{
+		InputStream inputStream = new FileInputStream(file);
+		HashMap<String, Object> hashmap = objectMapper.readValue(inputStream,HashMap.class);
+		logger.info("saving: "+hashmap.get("mid").toString());
+		String origin_user =  hashmap.get("user_url").toString();
+		ArrayList repostlist = (ArrayList) hashmap.get("repost_list");
+		for(Object item : repostlist){
+			//logger.info("当前循环次数： "+i);
+			HashMap m = (HashMap)item;
+			String cur_user_url = m.get("user_url").toString(); 
+			Object from_user = m.get("from_user_url");
+			String from_user_url = null;
+			if(from_user!=null){
+				from_user_url = from_user.toString();
+			}else{
+				from_user_url = origin_user;
+			}
+			write2db(from_user_url,cur_user_url);
+		}
 		
 	}
 	public static void main(String[] args) throws Exception{
-		Rel2db rd = new Rel2db();
-		String mid = "ABFMmAs8r";
-		String sql = "select `mid`,`user_url` from weibopost where `mid`=? ".replace("`", "\"");
-		PreparedStatement ps = rd.con.prepareStatement(sql);
-		ps.setString(1, mid);
-		ResultSet rs = ps.executeQuery();
-		String user_url = null;
-		if(rs.next()){
-			user_url = rs.getString(2);//取得当前分析的微博的用户
-		}
-		closeAll(rs,ps,null);
-		if(user_url==null){
-			logger.error("null user!");
-			System.exit(1);
-		}
-		
-		sql = "select `repost_id`,`repoststring`,`user_url` from weiborepost where `mid`=? ".replace("`", "\"");
-		PreparedStatement ps2 = rd.con.prepareStatement(sql);
-		ps2.setString(1, mid);
-		ResultSet rs2 = ps2.executeQuery();
-		int a = 0;
-		PrintWriter out=new PrintWriter(new BufferedWriter(new FileWriter("e:\\wtf.csv", true)));
-		while(rs2.next()){
-			a++;
-			logger.info("循环到第	"+Integer.toString(a)+"	次");
-			String repost_string = rs2.getString(2);
-			String cur_url = rs2.getString(3);
-			String[] sp = repost_string.split("//@");
-			if(sp.length >1){
-				//有//@则进行处理取得from_url,取不到则用user_url
-				String from_url = rd.getFromUrl(sp[1],mid,user_url) ;//取得来源用户
-				rd.writeOneLine(out, from_url, cur_url);
-				//rd.write2db(from_url,cur_url);
-				//卧槽这部分怎么写的？
-			}else{
-				//明显没有 //@ 则从user_url到cur_url
-				rd.writeOneLine(out, user_url, cur_url);
-				//rd.write2db(user_url,cur_url);
+	
+		if(args.length!=1){
+			System.out.println("Usage: pass one folder as arg.");
+		}else{
+			long begintime = System.currentTimeMillis();
+			logger.info("start");
+			File dir = new File(args[0]);
+			File[] files = dir.listFiles();
+			int i = 0;
+			for(File file:files){
+				//分析
+				Rel2db rd = new Rel2db();
+				i++;
+				logger.info("当前循环次数： "+i);
+				rd.saveRelationship(file);
+				rd.destory();
 			}
+			
+			logger.info("done");
+			long endtime=System.currentTimeMillis();
+			long costTime = (endtime - begintime)/1000;
+			logger.info("In " + String.valueOf(costTime) + " seconds.");
+			
 		}
-		closeAll(rs2,ps2,null);
-		out.close();
 	}
 }
